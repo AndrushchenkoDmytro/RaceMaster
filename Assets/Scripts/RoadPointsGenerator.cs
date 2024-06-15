@@ -2,11 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static RoadPointsGenerator;
+
 
 public class RoadPointsGenerator : MonoBehaviour
 {
+    public static RoadPointsGenerator instatnce;
+
     [SerializeField] private float roadWidth;
     [SerializeField] private float lineLenth;
     [SerializeField] private float maxCurveLenth;
@@ -18,10 +19,19 @@ public class RoadPointsGenerator : MonoBehaviour
 
     public RoadSegment[] roadSegments;
 
-    [SerializeField] private RoadMeshGenarator genarator;
+    [SerializeField] private RoadMeshGenarator generator;
 
     public void Awake()
     {
+        if(instatnce == null)
+        {
+            instatnce = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+
         Initialize();
         for (int i = 0; i < segmentsCount; i++)
         {
@@ -52,7 +62,7 @@ public class RoadPointsGenerator : MonoBehaviour
             }
         }
 
-        for (int i = 1; i < segmentsCount; i++)
+        for (int i = 0; i < segmentsCount; i++)
         {
             if (roadSegments[i].type == RoadSegmentType.line)
             {
@@ -74,13 +84,14 @@ public class RoadPointsGenerator : MonoBehaviour
                         roadSegments[i].lastPoints[1] = roadSegments[i].startPoints[1] + Vector3.right * lineLenth;
                     }
                 }
+                generator.CreateRoadLine(in roadSegments[i].startPoints, in roadSegments[i].lastPoints, 14);
             }
             else
             {
+                CurveDirection curveDirection;
                 if (roadSegments[i].startPoints[0].x != roadSegments[i].startPoints[1].x)
                 {
                     Vector3 endPoint = new Vector3(Random.Range(5,12),0,Random.Range(7,16)); 
-
                     int r = Random.Range(0,101);
                     if(r <= 50) // left
                     {
@@ -88,20 +99,24 @@ public class RoadPointsGenerator : MonoBehaviour
                         roadSegments[i].lastPoints[0] = roadSegments[i].startPoints[0] + new Vector3(endPoint.x, 0, endPoint.z - roadWidth);
                         roadSegments[i].lastPoints[1] = roadSegments[i].startPoints[1] + new Vector3(0, 0, endPoint.z + roadWidth);
                         roadSegments[i].lastPoints[1].x = roadSegments[i].lastPoints[0].x;
+                        curveDirection = CurveDirection.topLeft;
                     }
                     else
                     {
                         roadSegments[i].lastPoints[0] = roadSegments[i].startPoints[0] + new Vector3(0, 0, endPoint.z + roadWidth);
                         roadSegments[i].lastPoints[1] = roadSegments[i].startPoints[1] + new Vector3(endPoint.x, 0, endPoint.z - roadWidth);
                         roadSegments[i].lastPoints[0].x = roadSegments[i].lastPoints[1].x;
+                        curveDirection = CurveDirection.topRight;
+
                     }
 
                     roadSegments[i].interpolatePoints[0] = new Vector3(roadSegments[i].startPoints[0].x, 0, roadSegments[i].lastPoints[0].z);
                     roadSegments[i].interpolatePoints[1] = new Vector3(roadSegments[i].startPoints[1].x, 0, roadSegments[i].lastPoints[1].z);
+                    generator.CreateRoadCurve(in roadSegments[i].startPoints, in roadSegments[i].lastPoints, in roadSegments[i].interpolatePoints, 20, curveDirection,i);
                 }
                 else
                 {
-                    Vector3 endPoint = new Vector3(Random.Range(7, 16), 0, Random.Range(5, 12));
+                    Vector3 endPoint = new Vector3(Random.Range(7, 16), 0, Random.Range(7, 14));
 
                     if (roadSegments[i].startPoints[0].x < roadSegments[i-1].startPoints[0].x) // left
                     {
@@ -109,10 +124,11 @@ public class RoadPointsGenerator : MonoBehaviour
 
                         roadSegments[i].lastPoints[0] = roadSegments[i].startPoints[0] + new Vector3(endPoint.x - roadWidth, 0, endPoint.z);
                         roadSegments[i].lastPoints[1] = roadSegments[i].startPoints[1] + new Vector3(endPoint.x + roadWidth, 0, endPoint.z);
-                        //roadSegments[i].lastPoints[1].z = roadSegments[i].lastPoints[0].z;
+                        roadSegments[i].lastPoints[0].z = roadSegments[i].lastPoints[1].z;
 
                         roadSegments[i].interpolatePoints[0] = new Vector3(roadSegments[i].lastPoints[0].x, 0, roadSegments[i].startPoints[0].z);
                         roadSegments[i].interpolatePoints[1] = new Vector3(roadSegments[i].lastPoints[1].x, 0, roadSegments[i].startPoints[1].z);
+                        curveDirection = CurveDirection.bottomRight;
                     }
                     else
                     {
@@ -122,8 +138,9 @@ public class RoadPointsGenerator : MonoBehaviour
 
                         roadSegments[i].interpolatePoints[0] = new Vector3(roadSegments[i].lastPoints[0].x, 0, roadSegments[i].startPoints[0].z);
                         roadSegments[i].interpolatePoints[1] = new Vector3(roadSegments[i].lastPoints[1].x, 0, roadSegments[i].startPoints[1].z);
+                        curveDirection = CurveDirection.bottomLeft;
                     }
-
+                    generator.CreateRoadCurve(in roadSegments[i].startPoints, in roadSegments[i].lastPoints, in roadSegments[i].interpolatePoints, 20, curveDirection,i);
                 }
             }
             if (i < segmentsCount - 1)
@@ -132,17 +149,6 @@ public class RoadPointsGenerator : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < segmentsCount; i++)
-        {
-            if (roadSegments[i].type == RoadSegmentType.line)
-            {
-                genarator.CreateRoadLine(in roadSegments[i].startPoints, in roadSegments[i].lastPoints, 14);
-            }
-            else
-            {
-                genarator.CreateRoadCurve(in roadSegments[i].startPoints, in roadSegments[i].lastPoints, in roadSegments[i].interpolatePoints, 20);
-            }
-        }
     }
     private void Initialize()
     {
@@ -153,9 +159,9 @@ public class RoadPointsGenerator : MonoBehaviour
             roadSegments[i].lastPoints = new Vector3[2];
             roadSegments[i].interpolatePoints = new Vector3[2];
         }
-        roadSegments[0].startPoints = new Vector3[2] { new Vector3(-roadWidth, 0, 0), new Vector3(roadWidth, 0, 0) };
-        roadSegments[0].lastPoints = new Vector3[2] { new Vector3(-roadWidth, 0, 8), new Vector3(roadWidth, 0, 8) };
-        roadSegments[1].startPoints = new Vector3[2] { new Vector3(-roadWidth, 0, 8), new Vector3(roadWidth, 0, 8) };
+        roadSegments[0].startPoints = new Vector3[2] { new Vector3(-roadWidth, 0, 1), new Vector3(roadWidth, 0, 1) };
+        roadSegments[0].lastPoints = new Vector3[2] { new Vector3(-roadWidth, 0, lineLenth), new Vector3(roadWidth, 0, lineLenth) };
+        roadSegments[1].startPoints = new Vector3[2] { new Vector3(-roadWidth, 0, lineLenth), new Vector3(roadWidth, 0, lineLenth) };
     }
 
     public int GetSegmentsCount()
@@ -174,6 +180,13 @@ public enum RoadSegmentType
 {
     line,
     curve,
+}
+public enum CurveDirection
+{
+    topLeft,
+    topRight,
+    bottomLeft,
+    bottomRight
 }
 
 
