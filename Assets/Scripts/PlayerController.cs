@@ -28,9 +28,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField] bool changeCameraOffset = false;
     [SerializeField] bool zoomOut = false;
     Vector3 followCameraOffset = new Vector3(0,1,-4);
-    Vector3 followCameraMinOffset = new Vector3(0, 1, -4);
-    Vector3 followCameraMaxOffset = new Vector3(0,2.25f,-6.5f);
+    [SerializeField] Vector3 followCameraMinOffset = new Vector3(0, 1, -4);
+    [SerializeField] Vector3 followCameraMaxOffset = new Vector3(0,3f,-2f);
     [SerializeField] float cameraFollowSpeed = 0.150f;
+    float followCameraTime = 0;
 
     [SerializeField] CinemachineTransposer transposer;
 
@@ -79,15 +80,18 @@ public class PlayerController : MonoBehaviour
         {
             if (zoomOut)
             {
-                followCameraOffset = new Vector3(Mathf.Lerp(followCameraOffset.x, followCameraMaxOffset.x, cameraFollowSpeed * Time.deltaTime), Mathf.Lerp(followCameraOffset.y, followCameraMaxOffset.y, cameraFollowSpeed * Time.deltaTime), Mathf.Lerp(followCameraOffset.z, followCameraMaxOffset.z, cameraFollowSpeed * Time.deltaTime));
+                followCameraTime += cameraFollowSpeed * Time.deltaTime;
+                followCameraOffset = new Vector3(Mathf.Lerp(followCameraMinOffset.x, followCameraMaxOffset.x, followCameraTime ), Mathf.Lerp(followCameraMinOffset.y, followCameraMaxOffset.y, followCameraTime), Mathf.Lerp(followCameraMinOffset.z, followCameraMaxOffset.z, followCameraTime));
                 if(followCameraOffset.y >= followCameraMaxOffset.y)
                 {
                     changeCameraOffset = false;
                 }
+                
             }
             else
             {
-                followCameraOffset = new Vector3(Mathf.Lerp(followCameraOffset.x, followCameraMinOffset.x, cameraFollowSpeed * Time.deltaTime), Mathf.Lerp(followCameraOffset.y, followCameraMinOffset.y, cameraFollowSpeed * Time.deltaTime), Mathf.Lerp(followCameraOffset.z, followCameraMinOffset.z, cameraFollowSpeed * Time.deltaTime));
+                followCameraTime += cameraFollowSpeed * Time.deltaTime;
+                followCameraOffset = new Vector3(Mathf.Lerp(followCameraMaxOffset.x, followCameraMinOffset.x, followCameraTime), Mathf.Lerp(followCameraMaxOffset.y, followCameraMinOffset.y, followCameraTime), Mathf.Lerp(followCameraMaxOffset.z, followCameraMinOffset.z, followCameraTime));
                 if (followCameraOffset.y <= followCameraMinOffset.y)
                 {
                     changeCameraOffset = false;
@@ -104,6 +108,7 @@ public class PlayerController : MonoBehaviour
         transposer = cam.GetCinemachineComponent<CinemachineTransposer>();
         curveMovement = true;
         curveTime = 0;
+        followCameraTime = 0;
 
         startAdditionalAngle = 0;
         followCameraOffset = transposer.m_FollowOffset;
@@ -120,9 +125,9 @@ public class PlayerController : MonoBehaviour
             interpolatePoint = new Vector3(interpolatePoints[1].x - offset, transform.position.y, interpolatePoints[1].z - offset);
             moveDirection = Vector3.left;
             startRotateAngle = 0.01f;
-            endRotateAngle = -90;
+            endRotateAngle = -95;
             endAdditionalAngle = Random.Range(-50,-25);
-            followCameraMaxOffset.x = -1f;
+            followCameraMaxOffset.x = -3f;
 
         }
         else if(curveDirection == CurveDirection.topRight)
@@ -133,9 +138,9 @@ public class PlayerController : MonoBehaviour
             interpolatePoint = new Vector3(interpolatePoints[1].x - offset, transform.position.y, interpolatePoints[1].z + offset);
             moveDirection = Vector3.right;
             startRotateAngle = 0.01f;
-            endRotateAngle = 90;
+            endRotateAngle = 95;
             endAdditionalAngle = Random.Range(25, 50);
-            followCameraMaxOffset.x = 1f;
+            followCameraMaxOffset.x = 3f;
         }
         else if(curveDirection == CurveDirection.bottomLeft)
         {
@@ -144,10 +149,10 @@ public class PlayerController : MonoBehaviour
             endLerpPoint = new Vector3(endVertexes[1].x - offset, transform.position.y, endVertexes[1].z);
             interpolatePoint = new Vector3(interpolatePoints[1].x - offset, transform.position.y, interpolatePoints[1].z + offset);
             moveDirection = Vector3.forward;
-            startRotateAngle = 90;
+            startRotateAngle = 95;
             endRotateAngle = 0.01f;
             endAdditionalAngle = Random.Range(-50, -25);
-            followCameraMaxOffset.x = -1f;
+            followCameraMaxOffset.x = -3f;
         }
         else if(curveDirection == CurveDirection.bottomRight) 
         {
@@ -156,16 +161,18 @@ public class PlayerController : MonoBehaviour
             endLerpPoint = new Vector3(endVertexes[1].x - offset, transform.position.y, endVertexes[1].z);
             interpolatePoint = new Vector3(interpolatePoints[0].x + offset, transform.position.y, interpolatePoints[0].z + offset);
             moveDirection = Vector3.forward;
-            startRotateAngle = -90;
+            startRotateAngle = -95;
             endRotateAngle = 0.01f;
             endAdditionalAngle = Random.Range(25, 50);
-            followCameraMaxOffset.x = 1f;
+            followCameraMaxOffset.x = 3f;
         }
     }
     
     public void ChangeMovementToLine()
     {
+        followCameraTime = 0;
         zoomOut = false;
+        changeCameraOffset = true;
         Debug.Log("ZoomOut = " + zoomOut);
 
         //if (curveDirection == CurveDirection.topLeft)
