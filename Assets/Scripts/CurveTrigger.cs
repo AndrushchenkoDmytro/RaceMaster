@@ -25,6 +25,7 @@ public class CurveTrigger : MonoBehaviour
         {
             PlayerController pc = other.gameObject.GetComponent<PlayerController>();
             pc.ChangeMovementToCurve(startVertexes, endVertexes, interpolatePoints, curveDirection);
+            GameObject.FindGameObjectWithTag("MainCamera").GetComponent<CameraController>().SetCameraIncreaseOffsetValues(curveDirection);
         }
     }
 
@@ -37,6 +38,7 @@ public class CurveTrigger : MonoBehaviour
             {
                 pc.ChangeMovementToLine();
             }
+            //GameObject.FindGameObjectWithTag("MainCamera").GetComponent<CameraController>().SetCameraDecreaseOffsetValues(curveDirection);
         }
     }
 }
