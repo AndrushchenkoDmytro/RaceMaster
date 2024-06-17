@@ -25,6 +25,11 @@ public class CurveTrigger : MonoBehaviour
         {
             PlayerController pc = other.gameObject.GetComponent<PlayerController>();
             pc.ChangeMovementToCurve(startVertexes, endVertexes, interpolatePoints, curveDirection);
+        }
+        else if (other.tag == "CameraTarget")
+        {
+            CameraFollowTarget cft = other.gameObject.GetComponent<CameraFollowTarget>();
+            cft.ChangeMovementToCurve(startVertexes, endVertexes, interpolatePoints, curveDirection);
             GameObject.FindGameObjectWithTag("MainCamera").GetComponent<CameraController>().SetCameraIncreaseOffsetValues(curveDirection);
         }
     }
@@ -33,11 +38,7 @@ public class CurveTrigger : MonoBehaviour
     {
         if (other.tag == "Player")
         {
-            PlayerController pc = other.gameObject.GetComponent<PlayerController>();
-            if (RoadPointsGenerator.instatnce.roadSegments[index+1].type == RoadSegmentType.line)
-            {
-                pc.ChangeMovementToLine();
-            }
+
             //GameObject.FindGameObjectWithTag("MainCamera").GetComponent<CameraController>().SetCameraDecreaseOffsetValues(curveDirection);
         }
     }

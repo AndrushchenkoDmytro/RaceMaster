@@ -8,7 +8,6 @@ public class CameraController : MonoBehaviour
 {
     [SerializeField] private bool changeCameraOffset;
     [SerializeField] private bool zoomOut;
-    private float followCameraTime;
     [SerializeField] private float cameraFollowInitialSpeed;
     private float cameraFollowEndSpeed;
     private Vector3 followCameraOffset;
@@ -29,13 +28,11 @@ public class CameraController : MonoBehaviour
         {
             if (zoomOut)
             {
-                followCameraTime += cameraFollowEndSpeed * Time.deltaTime;
                 followCameraOffset = Vector3.Lerp(followCameraOffset, followCameraMaxOffset, cameraFollowEndSpeed * Time.deltaTime);
                 float distance = Vector3.Distance(followCameraOffset, followCameraMaxOffset);
                 if (distance <= 0.05f)
                 {
                     zoomOut = false;
-                    followCameraTime = 0;
                     followCameraMinOffset.x = 0f;
                     cameraFollowEndSpeed = cameraFollowInitialSpeed;
                 }
@@ -47,7 +44,6 @@ public class CameraController : MonoBehaviour
             }
             else
             {
-                followCameraTime += cameraFollowEndSpeed * Time.deltaTime;
                 followCameraOffset = Vector3.Lerp(followCameraOffset, followCameraMinOffset, cameraFollowEndSpeed * Time.deltaTime);
                 float distance = Vector3.Distance(followCameraOffset, followCameraMinOffset);
                 if (distance <= 0.05f)
@@ -68,7 +64,6 @@ public class CameraController : MonoBehaviour
         transposer = vCam.GetCinemachineComponent<CinemachineTransposer>();
         changeCameraOffset = true;
         zoomOut = true;
-        followCameraTime = 0;
         cameraFollowEndSpeed = cameraFollowInitialSpeed;
 
         if (curveDirection == CurveDirection.topLeft)
@@ -93,7 +88,6 @@ public class CameraController : MonoBehaviour
     {
         changeCameraOffset = true;
         zoomOut = false;
-        followCameraTime = 0;
         followCameraMinOffset.x = 0f;
         cameraFollowEndSpeed = cameraFollowInitialSpeed;
 

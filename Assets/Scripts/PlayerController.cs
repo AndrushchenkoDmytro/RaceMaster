@@ -2,17 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static RoadPointsGenerator;
 
 public class PlayerController : MonoBehaviour
 {
     Vector3 moveDirection = Vector3.forward; 
+    [SerializeField] Vector3 definitiveDirection = Vector3.forward;
+    [SerializeField] float turnSpeed = 0.5f;
     [SerializeField] float speed;
     [SerializeField] float initialSpeed;
     [SerializeField] float maxSpeed;
     [SerializeField] float curveSpeed = 0.25f;
-    [SerializeField] RoadPointsGenerator rpg;
-    [SerializeField] CinemachineVirtualCamera cam;
+    float minXpos, maxXpos;
+    float minZpos, maxZpos;
+    int turnDir = 1;
 
     bool curveMovement = false;
     [SerializeField] float curveTime = 0;
@@ -25,24 +27,20 @@ public class PlayerController : MonoBehaviour
     Transform rotateObject;
     [SerializeField] float startAdditionalAngle = 30;
     [SerializeField] float endAdditionalAngle;
+    [SerializeField] Vector3 tmp;
 
-    Vector3 lastPos = Vector3.zero;
-    [SerializeField] float deltaPos;
-
-    [SerializeField] CinemachineTransposer transposer;
-
+    float roadWidth;
 
     private void Start()
     {
-        var transposer = cam.GetCinemachineComponent<CinemachineTransposer>();
-
+        roadWidth = 0.5f;
+        maxXpos = RoadPointsGenerator.instatnce.GetRoadWidth() - roadWidth;
+        minXpos = -maxXpos;
         rotateObject = transform.GetChild(0);
     }
 
     private void Update()
     {
-        deltaPos = Vector3.Distance(transform.position,lastPos);
-        lastPos = transform.position;
         if (curveMovement)
         {
             if(curveTime < 1f)
@@ -63,16 +61,48 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            if(speed < maxSpeed)
+            if (speed < maxSpeed)
             {
-                speed += Time.deltaTime * 0.25f; 
+                speed += Time.deltaTime * 0.25f;
             }
             else
             {
                 speed = maxSpeed;
             }
-            //moveDirection.x = curveSpeed * Input.GetAxis("Horizontal");
-            transform.position += moveDirection * speed * Time.deltaTime;
+
+            tmp = transform.position;
+            if (moveDirection.z != 0)
+            {
+                Debug.Log("vertiacal");
+                definitiveDirection.x = turnSpeed * turnDir * Input.GetAxis("Horizontal") * Time.deltaTime;
+                tmp += definitiveDirection * speed * Time.deltaTime;
+
+                if(tmp.x < minXpos)
+                {
+                    tmp.x = minXpos;
+                }
+                else if(tmp.x > maxXpos)
+                {
+                    tmp.x = maxXpos;
+                }
+            }
+            else
+            {
+                Debug.Log("horizontal");
+                definitiveDirection.z = turnSpeed * turnDir * Input.GetAxis("Horizontal") * Time.deltaTime;
+                tmp += definitiveDirection * speed * Time.deltaTime;
+
+                if (tmp.z < minZpos)
+                {
+                    tmp.z = minZpos;
+                }
+                else if (tmp.z > maxZpos)
+                {
+                    tmp.z = maxZpos;
+                }
+            }
+            transform.position = tmp;
+      
         }
     }
 
@@ -98,7 +128,6 @@ public class PlayerController : MonoBehaviour
 
     public void ChangeMovementToCurve(in Vector3[] startVertexes, in Vector3[] endVertexes, in Vector3[] interpolatePoints, CurveDirection curveDirection)
     {
-        transposer = cam.GetCinemachineComponent<CinemachineTransposer>();
         curveMovement = true;
         curveTime = 0;
         startAdditionalAngle = 0;
@@ -114,28 +143,36 @@ public class PlayerController : MonoBehaviour
             startRotateAngle = 0.01f;
             endRotateAngle = -90;
             endAdditionalAngle = Random.Range(-70,-45);
+            turnDir = 1;
+            maxZpos = endVertexes[1].z - roadWidth;
+            minZpos = endVertexes[0].z + roadWidth;
         }
         else if(curveDirection == CurveDirection.topRight)
         {
             float offset = startVertexes[1].x - transform.position.x;
             startLerpPoint = transform.position;
-            endLerpPoint = new Vector3(endVertexes[1].x, transform.position.y, endVertexes[0].z - offset);
+            endLerpPoint = new Vector3(endVertexes[1].x, transform.position.y, endVertexes[1].z + offset);
             interpolatePoint = new Vector3(interpolatePoints[1].x - offset, transform.position.y, interpolatePoints[1].z + offset);
             moveDirection = Vector3.right;
             startRotateAngle = 0.01f;
             endRotateAngle = 90;
             endAdditionalAngle = Random.Range(45, 70);
+            turnDir = 1;
+            maxZpos = endVertexes[0].z - roadWidth;
+            minZpos = endVertexes[1].z + roadWidth;
         }
         else if(curveDirection == CurveDirection.bottomLeft)
         {
             float offset = startVertexes[0].z - transform.position.z;
             startLerpPoint = transform.position;
-            endLerpPoint = new Vector3(endVertexes[1].x - offset, transform.position.y, endVertexes[1].z);
+            endLerpPoint = new Vector3(endVertexes[0].x + offset, transform.position.y, endVertexes[1].z);
             interpolatePoint = new Vector3(interpolatePoints[1].x - offset, transform.position.y, interpolatePoints[1].z + offset);
             moveDirection = Vector3.forward;
             startRotateAngle = 90;
             endRotateAngle = 0.01f;
             endAdditionalAngle = Random.Range(-70, -45);
+            maxXpos = endVertexes[1].x - roadWidth;
+            minXpos = endVertexes[0].x + roadWidth;
         }
         else if(curveDirection == CurveDirection.bottomRight) 
         {
@@ -147,8 +184,11 @@ public class PlayerController : MonoBehaviour
             startRotateAngle = -90;
             endRotateAngle = 0.01f;
             endAdditionalAngle = Random.Range(45, 70);
+            maxXpos = endVertexes[1].x - roadWidth;
+            minXpos = endVertexes[0].x + roadWidth;
         }
         speed = initialSpeed;
+        definitiveDirection = moveDirection;
     }
     
     public void ChangeMovementToLine()

@@ -8,18 +8,26 @@ public class RoadPointsGenerator : MonoBehaviour
 {
     public static RoadPointsGenerator instatnce;
 
+    public float GetRoadWidth()
+    {
+        return roadWidth;
+    }
+    public float GetLineLenth()
+    {
+        return lineLenth;
+    }
+
+    [SerializeField] private RoadMeshGenarator generator;
     [SerializeField] private float roadWidth;
     [SerializeField] private float lineLenth;
     [SerializeField] private float maxCurveLenth;
     [SerializeField] private float minCurveLenth;
-
     [SerializeField] private int segmentsCount;
+
     RoadSegmentType dir = RoadSegmentType.line;
     int duplicationCount = 0;
 
     public RoadSegment[] roadSegments;
-
-    [SerializeField] private RoadMeshGenarator generator;
 
     public void Awake()
     {
