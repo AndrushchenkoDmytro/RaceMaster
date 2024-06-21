@@ -7,6 +7,7 @@ using UnityEngine;
 public class RoadPointsGenerator : MonoBehaviour
 {
     public static RoadPointsGenerator instatnce;
+    [SerializeField] EnvironmentSpawner environmentSpawner;
 
     public float GetRoadWidth()
     {
@@ -20,8 +21,6 @@ public class RoadPointsGenerator : MonoBehaviour
     [SerializeField] private RoadMeshGenarator generator;
     [SerializeField] private float roadWidth;
     [SerializeField] private float lineLenth;
-    [SerializeField] private float maxCurveLenth;
-    [SerializeField] private float minCurveLenth;
     [SerializeField] private int segmentsCount;
 
     RoadSegmentType dir = RoadSegmentType.line;
@@ -157,6 +156,7 @@ public class RoadPointsGenerator : MonoBehaviour
             }
         }
 
+        environmentSpawner.SpawnEnvironment(roadSegments, lineLenth, roadWidth);
     }
     private void Initialize()
     {

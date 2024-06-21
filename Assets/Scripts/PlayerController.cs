@@ -157,7 +157,7 @@ public class PlayerController : MonoBehaviour
             startRotateAngle = 0.01f;
             endRotateAngle = 90;
             endAdditionalAngle = Random.Range(45, 70);
-            turnDir = 1;
+            turnDir = -1;
             maxZpos = endVertexes[0].z - roadWidth;
             minZpos = endVertexes[1].z + roadWidth;
         }
@@ -171,6 +171,7 @@ public class PlayerController : MonoBehaviour
             startRotateAngle = 90;
             endRotateAngle = 0.01f;
             endAdditionalAngle = Random.Range(-70, -45);
+            turnDir = 1;
             maxXpos = endVertexes[1].x - roadWidth;
             minXpos = endVertexes[0].x + roadWidth;
         }
@@ -184,6 +185,7 @@ public class PlayerController : MonoBehaviour
             startRotateAngle = -90;
             endRotateAngle = 0.01f;
             endAdditionalAngle = Random.Range(45, 70);
+            turnDir = 1;
             maxXpos = endVertexes[1].x - roadWidth;
             minXpos = endVertexes[0].x + roadWidth;
         }
